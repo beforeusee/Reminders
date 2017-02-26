@@ -1,10 +1,15 @@
 package cn.edu.buaa.a103.reminders;
 
+import android.app.Dialog;
 import android.database.Cursor;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 public class RemindersActivity extends AppCompatActivity {
 
@@ -50,8 +55,39 @@ public class RemindersActivity extends AppCompatActivity {
         mListView.setAdapter(mCursorAdapter);
 
         //Abbreviated for brevity
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, final int masterListPosition, long id) {
+                AlertDialog.Builder builder=new AlertDialog.Builder(RemindersActivity.this);
 
+                ListView modeListView=new ListView(RemindersActivity.this);
+                String[] modes=new String[]{"Edit Reminder","Delete Reminder"};
+                ArrayAdapter<String> modeAdapter=new ArrayAdapter<String>(RemindersActivity.this,
+                        android.R.layout.simple_list_item_1,android.R.id.text1,modes);
+                modeListView.setAdapter(modeAdapter);
+                builder.setView(modeListView);
+                final Dialog dialog=builder.create();
+                dialog.show();
+
+                modeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        if (position==0){
+                            Toast.makeText(RemindersActivity.this,"edit"+masterListPosition,
+                                    Toast.LENGTH_SHORT).show();
+                        }else {
+                            Toast.makeText(RemindersActivity.this,"delete"+masterListPosition,
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                        dialog.dismiss();  //将对话框彻底删除
+                    }
+                });
+                Toast.makeText(RemindersActivity.this,"clicked"+masterListPosition,Toast.LENGTH_SHORT).show();
+            }
+        });
     }
+
+
 
     private void insertSomeReminders() {
         mDbAdapter.createReminder("Buy Learn Android Studio",true);
