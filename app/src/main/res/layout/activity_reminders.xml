@@ -21,4 +21,11 @@
         android:layout_centerHorizontal="true"
         tools:listitem="@layout/reminders_row"
         />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/bt_add"
+        android:text="新建"
+        />
 </RelativeLayout>
