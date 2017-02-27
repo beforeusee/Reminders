@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.database.Cursor;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,18 +13,27 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
+
 
 public class RemindersActivity extends AppCompatActivity {
 
     private ListView mListView;
     private RemindersDbAdapter mDbAdapter;
     private ReminderSimpleCursorAdapter mCursorAdapter;
+    private Button mAddButton;
 
+    //版本
     @RequiresApi(api = Build.VERSION_CODES.HONEYCOMB)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,15 +45,23 @@ public class RemindersActivity extends AppCompatActivity {
         mDbAdapter=new RemindersDbAdapter(this);
         mDbAdapter.open();
 
-        if (savedInstanceState==null){
+        mAddButton= (Button) findViewById(R.id.bt_add);
+        mAddButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                fireCustomDialog(null);
+            }
+        });
+
+        Cursor cursor=mDbAdapter.fetchAllReminders();
+
+        //检查是否有任何已保存的实例；如果没有就先创建一些示例数据
+        if (cursor==null){
             //清除所有数据
             mDbAdapter.deleteAllReminders();
             //Add some data
             insertSomeReminders();
-
         }
-
-        Cursor cursor=mDbAdapter.fetchAllReminders();
 
         //from columns defined in the db
         String[] from=new String[]{
@@ -80,12 +98,14 @@ public class RemindersActivity extends AppCompatActivity {
                 modeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        //edit reminder
                         if (position==0){
-                            Toast.makeText(RemindersActivity.this,"edit"+masterListPosition,
-                                    Toast.LENGTH_SHORT).show();
+                            int nId=getIdFromPosition(masterListPosition);
+                            Reminder reminder=mDbAdapter.fecthReminderById(nId);
+                            fireCustomDialog(reminder);
                         }else {
-                            Toast.makeText(RemindersActivity.this,"delete"+masterListPosition,
-                                    Toast.LENGTH_SHORT).show();
+                            mDbAdapter.deleteRemindersById(getIdFromPosition(masterListPosition));
+                            mCursorAdapter.changeCursor(mDbAdapter.fetchAllReminders());
                         }
                         dialog.dismiss();  //将对话框彻底删除
                     }
@@ -138,41 +158,60 @@ public class RemindersActivity extends AppCompatActivity {
 
     }
 
+
     private int getIdFromPosition(int nC) {
         return (int) mCursorAdapter.getItemId(nC);
     }
 
+    private void fireCustomDialog(final Reminder reminder){
+        //custom dialog
+        final Dialog dialog=new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_custom);
+
+        TextView titleView= (TextView) dialog.findViewById(R.id.custom_title);
+        final EditText editCustom= (EditText) dialog.findViewById(R.id.custom_edit_reminder);
+        Button commitButton= (Button) dialog.findViewById(R.id.custom_button_commit);
+        final CheckBox checkBox= (CheckBox) dialog.findViewById(R.id.custom_check_box);
+        LinearLayout rootLayout= (LinearLayout) dialog.findViewById(R.id.custom_root_layout);
+        final boolean isEditOperation=(reminder!=null);
+
+        //this is for an edit
+        if (isEditOperation){
+            titleView.setText("Edit Reminder");
+            checkBox.setChecked(reminder.getImportant()==1);
+            editCustom.setText(reminder.getContent());
+            rootLayout.setBackgroundColor(getResources().getColor(R.color.blue));
+        }
+
+        commitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String reminderText=editCustom.getText().toString();
+                if (isEditOperation){
+                    Reminder reminderEdited=new Reminder(reminder.getId(),reminderText,checkBox.isChecked()?1:0);
+                    mDbAdapter.updateReminder(reminderEdited);
+                }else {
+                    mDbAdapter.createReminder(reminderText,checkBox.isChecked());  //创建新的reminder
+                }
+                mCursorAdapter.changeCursor(mDbAdapter.fetchAllReminders());
+                dialog.dismiss();
+            }
+        });
+        Button buttonCancel= (Button) dialog.findViewById(R.id.custom_button_cancel);
+        buttonCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
+    }
 
     private void insertSomeReminders() {
-        mDbAdapter.createReminder("Buy Learn Android Studio",true);
-        mDbAdapter.createReminder("Send birthday gift",true);
-        mDbAdapter.createReminder("Dinner at the Gage on Friday",false);
-        mDbAdapter.createReminder("String squash racket",false);
-        mDbAdapter.createReminder("Shovel and salt walkways",true);
-        mDbAdapter.createReminder("Prepare Advanced Android syllabus",false);
-        mDbAdapter.createReminder("Buy new office chair",false);
-        mDbAdapter.createReminder("Buy phone for Ms Peng",false);
-        mDbAdapter.createReminder("Buy birthday gift for Ms Peng",true);
-        mDbAdapter.createReminder("Finish the DataSearch Module today",true);
-        mDbAdapter.createReminder("Buy Learn Android Studio",true);
-        mDbAdapter.createReminder("Send birthday gift",true);
-        mDbAdapter.createReminder("Dinner at the Gage on Friday",false);
-        mDbAdapter.createReminder("String squash racket",false);
-        mDbAdapter.createReminder("Shovel and salt walkways",true);
-        mDbAdapter.createReminder("Prepare Advanced Android syllabus",false);
-        mDbAdapter.createReminder("Buy new office chair",false);
-        mDbAdapter.createReminder("Buy phone for Ms Peng",false);
-        mDbAdapter.createReminder("Buy birthday gift for Ms Peng",true);
-        mDbAdapter.createReminder("Finish the DataSearch Module today",true);
-        mDbAdapter.createReminder("Buy Learn Android Studio",true);
-        mDbAdapter.createReminder("Send birthday gift",true);
-        mDbAdapter.createReminder("Dinner at the Gage on Friday",false);
-        mDbAdapter.createReminder("String squash racket",false);
-        mDbAdapter.createReminder("Shovel and salt walkways",true);
-        mDbAdapter.createReminder("Prepare Advanced Android syllabus",false);
-        mDbAdapter.createReminder("Buy new office chair",false);
-        mDbAdapter.createReminder("Buy phone for Ms Peng",false);
-        mDbAdapter.createReminder("Buy birthday gift for Ms Peng",true);
-        mDbAdapter.createReminder("Finish the DataSearch Module today",true);
+        mDbAdapter.createReminder("我爱彭小姐",true);
+        mDbAdapter.createReminder("我爱彭小姐",true);
+        mDbAdapter.createReminder("我爱彭小姐",true);
+        mDbAdapter.createReminder("重要的事情说三遍！！！",true);
     }
 }
