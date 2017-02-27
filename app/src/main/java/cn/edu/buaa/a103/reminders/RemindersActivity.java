@@ -45,6 +45,14 @@ public class RemindersActivity extends AppCompatActivity {
         mDbAdapter=new RemindersDbAdapter(this);
         mDbAdapter.open();
 
+/*        //检查是否有任何已保存的实例；如果没有就先创建一些示例数据
+        if (savedInstanceState==null){
+            //清除所有数据
+            mDbAdapter.deleteAllReminders();
+            //Add some data
+            insertSomeReminders();
+        }*/
+
         mAddButton= (Button) findViewById(R.id.bt_add);
         mAddButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -54,14 +62,6 @@ public class RemindersActivity extends AppCompatActivity {
         });
 
         Cursor cursor=mDbAdapter.fetchAllReminders();
-
-        //检查是否有任何已保存的实例；如果没有就先创建一些示例数据
-        if (cursor==null){
-            //清除所有数据
-            mDbAdapter.deleteAllReminders();
-            //Add some data
-            insertSomeReminders();
-        }
 
         //from columns defined in the db
         String[] from=new String[]{
@@ -113,6 +113,8 @@ public class RemindersActivity extends AppCompatActivity {
                 Toast.makeText(RemindersActivity.this,"clicked"+masterListPosition,Toast.LENGTH_SHORT).show();
             }
         });
+
+        //多选模式下的操作
         if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.HONEYCOMB){
             mListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
             mListView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
@@ -155,7 +157,6 @@ public class RemindersActivity extends AppCompatActivity {
                 }
             });
         }
-
     }
 
 
@@ -163,6 +164,7 @@ public class RemindersActivity extends AppCompatActivity {
         return (int) mCursorAdapter.getItemId(nC);
     }
 
+    //插入编辑对话框
     private void fireCustomDialog(final Reminder reminder){
         //custom dialog
         final Dialog dialog=new Dialog(this);
@@ -208,10 +210,16 @@ public class RemindersActivity extends AppCompatActivity {
         dialog.show();
     }
 
+    //插入示例的函数
     private void insertSomeReminders() {
-        mDbAdapter.createReminder("我爱彭小姐",true);
-        mDbAdapter.createReminder("我爱彭小姐",true);
-        mDbAdapter.createReminder("我爱彭小姐",true);
-        mDbAdapter.createReminder("重要的事情说三遍！！！",true);
+        mDbAdapter.createReminder("This is a reminder",true);
+        mDbAdapter.createReminder("This is a reminder that support CHOICE_MODE_MULTIPLE_MODAL",true);
+        mDbAdapter.createReminder("This reminder uses SQLite",true);
+    }
+
+    @Override
+    protected void onDestroy() {
+        mDbAdapter.close();          //当执行App的onDestroy时，关闭数据库
+        super.onDestroy();
     }
 }

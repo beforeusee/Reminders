@@ -13,21 +13,20 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="cn.edu.buaa.a103.reminders.RemindersActivity">
 
-    <ListView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
 
-        android:id="@+id/lv_reminders"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        tools:listitem="@layout/reminders_row"
-        />
+            android:id="@+id/lv_reminders"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            tools:listitem="@layout/reminders_row"/>
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/bt_add"
-        android:text="新建"
-        android:textSize="20sp"
-        />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/bt_add"
+            android:text="New"
+            android:textAllCaps="false"
+            android:textSize="18sp"/>
 </LinearLayout>
